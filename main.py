@@ -32,6 +32,15 @@ def main() -> None:
     # FILE must be world-readable. Never chmod the /output directory
     # itself — it may be root-owned.
     os.chmod(OUTPUT_PATH, 0o644)
+    # Read the file back and prove it is byte-exact before exiting:
+    # a silent short write must fail loudly instead of submitting
+    # a truncated line.
+    with open(OUTPUT_PATH, "r", encoding="utf-8", newline="") as handle:
+        written = handle.read()
+    if written != ENTRY + "\n":
+        raise ValueError("entry.txt does not match the entry after writing")
+    if oct(os.stat(OUTPUT_PATH).st_mode & 0o777) != "0o644":
+        raise ValueError("entry.txt is not mode 0644")
 
 
 if __name__ == "__main__":
